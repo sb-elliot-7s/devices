@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    restart: always
+    ports:
+      - 8000:8000
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - POSTGRES_HOST=postgresql+asyncpg://postgres:postgres@database:5432/db
+      - REDIS_HOST=redis://cache
+    volumes:
+      - .:/app
+    depends_on:
+      - cache
+      - database
+
+  cache:
+    image: redis
+    restart: always
+    container_name: redis_container
+    ports:
+      - 6379:6379
+    volumes:
+      - caches:/data
+
+  database:
+    image: postgres
+    restart: always
+    container_name: postgres_container
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=db
+    volumes:
+      - postgres_data:/var/lib/postgresql_data
+
+  database_admin:
+    image: dpage/pgadmin4
+    restart: always
+    container_name: admin_container
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=12345
+    ports:
+      - 5050:80
+    depends_on:
+      - database
+
+volumes:
+  postgres_data:
+  caches:
